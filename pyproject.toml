@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "engram"
+version = "0.1.0"
+description = "Persistent, semantic memory for local LLMs"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Engram Contributors" },
+]
+keywords = ["llm", "memory", "ollama", "local", "semantic", "ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+    "httpx>=0.24.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "httpx",          # for FastAPI test client
+]
+
+[project.scripts]
+engram = "engram.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/engram-memory/engram"
+Documentation = "https://github.com/engram-memory/engram#readme"
+Repository = "https://github.com/engram-memory/engram"
+Issues = "https://github.com/engram-memory/engram/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/engram"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
