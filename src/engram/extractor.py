@@ -10,13 +10,16 @@ import json
 import logging
 import re
 import threading
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from engram.config import EngramConfig
 from engram.embeddings import EmbeddingEngine
 from engram.llm import LLMClient
 from engram.models import Memory, MemoryType
 from engram.store import MemoryStore
+
+if TYPE_CHECKING:
+    from engram.conflicts import ConflictResolver
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +61,13 @@ class MemoryExtractor:
         embedding_engine: EmbeddingEngine,
         llm_client: LLMClient,
         config: EngramConfig,
+        conflict_resolver: Optional[ConflictResolver] = None,
     ):
         self.store = store
         self.embedding_engine = embedding_engine
         self.llm_client = llm_client
         self.config = config
+        self.conflict_resolver = conflict_resolver
 
     def extract_async(
         self,
@@ -154,6 +159,17 @@ class MemoryExtractor:
                     f"Extracted memory [{memory.type.value}] "
                     f"(importance={memory.importance:.2f}): {memory.content[:60]}"
                 )
+
+                # Check for contradictions with existing memories
+                if self.conflict_resolver is not None:
+                    try:
+                        self.conflict_resolver.check_and_resolve(
+                            new_memory=memory,
+                            new_embedding=embedding,
+                            model=model,
+                        )
+                    except Exception as e:
+                        logger.warning(f"Conflict check failed: {e}")
 
         except Exception as e:
             # Extraction failures are never surfaced to the user

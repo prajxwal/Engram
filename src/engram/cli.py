@@ -497,6 +497,73 @@ def reset():
 
 
 # ======================================================================
+# engram serve
+# ======================================================================
+
+@cli.command()
+@click.option("--port", "-p", default=None, type=int, help="Port (default: from config)")
+@click.option("--host", "-h", default="127.0.0.1", help="Host to bind to")
+def serve(port, host):
+    """Start the Engram REST API server."""
+    cfg = EngramConfig.load()
+    api_port = port or cfg.api_port
+
+    console.print(
+        Panel(
+            f"[bold cyan]Engram API Server[/bold cyan]\n"
+            f"Listening on [green]{host}:{api_port}[/green]\n"
+            f"Docs: [blue]http://{host}:{api_port}/docs[/blue]",
+            border_style="cyan",
+        )
+    )
+
+    try:
+        import uvicorn
+        from engram.api import create_app
+        app = create_app()
+        uvicorn.run(app, host=host, port=api_port, log_level="info")
+    except ImportError:
+        console.print("[red]Error:[/red] uvicorn is required. Install with: pip install uvicorn")
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
+
+
+# ======================================================================
+# engram reindex
+# ======================================================================
+
+@cli.command()
+@click.confirmation_option(prompt="This will re-embed all memories. Continue?")
+def reindex():
+    """Re-embed all memories with the current embedding model."""
+    client = _get_client()
+
+    try:
+        memories = client.list(include_archived=True)
+        total = len(memories)
+
+        if total == 0:
+            console.print("[dim]No memories to reindex.[/dim]")
+            return
+
+        console.print(f"Re-indexing {total} memories with [cyan]{client.embedding_engine.model_name}[/cyan]...")
+
+        from rich.progress import Progress
+        with Progress(console=console) as progress:
+            task = progress.add_task("Reindexing...", total=total)
+
+            for memory in memories:
+                new_embedding = client.embedding_engine.embed(memory.content)
+                memory.embedding_model = client.embedding_engine.model_name
+                client.store.update(memory, embedding=new_embedding)
+                progress.advance(task)
+
+        console.print(f"[green]✓[/green] Reindexed {total} memories.")
+    finally:
+        client.close()
+
+
+# ======================================================================
 # Entry point
 # ======================================================================
 

@@ -13,6 +13,7 @@ import uuid
 from typing import Iterator, Optional
 
 from engram.config import EngramConfig
+from engram.conflicts import ConflictResolver
 from engram.embeddings import EmbeddingEngine, create_embedding_engine
 from engram.extractor import MemoryExtractor
 from engram.llm import LLMClient
@@ -69,6 +70,7 @@ class MemoryClient:
         self._llm_client: Optional[LLMClient] = None
         self._retriever: Optional[MemoryRetriever] = None
         self._extractor: Optional[MemoryExtractor] = None
+        self._conflict_resolver: Optional[ConflictResolver] = None
 
         # Session tracking
         self._session_id = uuid.uuid4().hex
@@ -110,6 +112,17 @@ class MemoryClient:
         return self._retriever
 
     @property
+    def conflict_resolver(self) -> ConflictResolver:
+        if self._conflict_resolver is None:
+            self._conflict_resolver = ConflictResolver(
+                store=self.store,
+                embedding_engine=self.embedding_engine,
+                llm_client=self.llm_client,
+                config=self.config,
+            )
+        return self._conflict_resolver
+
+    @property
     def extractor(self) -> MemoryExtractor:
         if self._extractor is None:
             self._extractor = MemoryExtractor(
@@ -117,6 +130,7 @@ class MemoryClient:
                 embedding_engine=self.embedding_engine,
                 llm_client=self.llm_client,
                 config=self.config,
+                conflict_resolver=self.conflict_resolver,
             )
         return self._extractor
 
