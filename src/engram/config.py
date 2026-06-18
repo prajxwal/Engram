@@ -131,6 +131,13 @@ class EngramConfig:
         # Start with defaults
         config = cls()
 
+        # Apply data_dir early so config file is read from the right place.
+        # Priority: explicit override > env var > default.
+        if overrides.get("data_dir") is not None:
+            config.data_dir = overrides["data_dir"]
+        elif os.environ.get("ENGRAM_DATA_DIR"):
+            config.data_dir = os.environ["ENGRAM_DATA_DIR"]
+
         # Layer 1: Config file (if it exists)
         if os.path.exists(config.config_file_path):
             try:

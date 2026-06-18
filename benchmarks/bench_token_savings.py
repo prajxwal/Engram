@@ -127,9 +127,9 @@ def main():
     print()
 
     if savings >= 50:
-        print(f"✓ TARGET MET: {savings:.1f}% reduction exceeds 50% target")
+        print(f"[PASS] TARGET MET: {savings:.1f}% reduction exceeds 50% target")
     else:
-        print(f"✗ TARGET MISSED: {savings:.1f}% reduction below 50% target")
+        print(f"[FAIL] TARGET MISSED: {savings:.1f}% reduction below 50% target")
 
     print()
     print("Key insight: Engram replaces N turns of conversation history with a compact")
